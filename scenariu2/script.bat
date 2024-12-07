@@ -1,0 +1,1 @@
+for /l %x in (2, 1, 8) do echo> t%x.clp
