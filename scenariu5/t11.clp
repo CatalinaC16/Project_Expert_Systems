@@ -1,2 +1,2 @@
 
-(ag_percept (percept_pobj snowing_sensor) (percept_pname is_snowing) (percept_pval true))
+(ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_alunecos) (percept_pval vede) (percept_pdistance 150))

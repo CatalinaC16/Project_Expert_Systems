@@ -1,2 +1,2 @@
 
-(ag_percept (percept_pobj road_sign) (percept_pname drum_privat_15) (percept_pval entering))
+(ag_percept (percept_pobj senzor_ploaie) (percept_pname ploua) (percept_pval true))

@@ -1,3 +1,3 @@
 
-(ag_percept (percept_pobj car_sensor) (percept_pname trecere_de_pietoni) (percept_pval false))
+(ag_percept (percept_pobj semn_de_circulatie) (percept_pname viteza_maxima_50) (percept_pval intra))
 

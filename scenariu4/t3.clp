@@ -1,2 +1,2 @@
 
-(ag_percept (percept_pobj road_sign) (percept_pname zona_rezidentiala) (percept_pval entering))
+(ag_percept (percept_pobj semn_de_circulatie) (percept_pname pericol_animale) (percept_pval intra))

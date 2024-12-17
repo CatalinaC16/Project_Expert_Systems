@@ -1,2 +1,2 @@
 
-(ag_percept (percept_pobj car_sensor) (percept_pname drum_offroad) (percept_pval ended))
+(ag_percept (percept_pobj semn_de_circulatie) (percept_pname zona_rezidentiala) (percept_pval intra))

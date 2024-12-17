@@ -1,0 +1,1 @@
+(ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_in_lucru) (percept_pval iesire))

@@ -1,2 +1,2 @@
 
-(ag_percept (percept_pobj gps_info) (percept_pname drum_privat_15) (percept_pval false))
+(ag_percept (percept_pobj semn_de_circulatie) (percept_pname trecere_granita) (percept_pval vede) (percept_pdistance 150))

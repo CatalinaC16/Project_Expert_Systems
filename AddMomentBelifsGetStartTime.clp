@@ -14,8 +14,8 @@
 (defrule AGENT::percepts_into_beliefs "copy each percept into a moment belief to separate pecepts and beliefs"
   (declare (salience 93))
   (timp (valoare ?t))
-  (ag_percept (percept_pobj ?pobj) (percept_pname ?pname) (percept_pval ?pval))
+  (ag_percept (percept_pobj ?pobj) (percept_pname ?pname) (percept_pval ?pval) (percept_pdistance ?pdistance))
 =>
   (if (eq ?*ag-percepts-in-debug* TRUE) then (printout t ?pobj "  " ?pname "  " ?pval crlf))
-  (assert (ag_bel (bel_type moment) (bel_pobj ?pobj) (bel_pname ?pname) (bel_pval ?pval)))
+  (assert (ag_bel (bel_type moment) (bel_pobj ?pobj) (bel_pname ?pname) (bel_pval ?pval) (bel_pdistance ?pdistance)))
 )

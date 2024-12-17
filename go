@@ -15,19 +15,19 @@
  
 (reset)
  
-(run 65)
+(run 92)
  
 ; scenariu1
-;(run 75)
+;(run 102)
  
 ; scenariu2
-;(run 120)
+;(run 92)
  
 ; scenariu3
-;(run 132)
+;(run 85)
  
 ; scenariu4
-;(run 130)
+;(run 118)
  
 ; scenariu5
 ;(run 141)

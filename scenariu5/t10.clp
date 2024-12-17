@@ -1,2 +1,1 @@
-
-(ag_percept (percept_pobj gps_info) (percept_pname drum_privat_10) (percept_pval false))
+(ag_percept (percept_pobj car_sensor) (percept_pname dispozitive_limitare_viteza) (percept_pval iesire))

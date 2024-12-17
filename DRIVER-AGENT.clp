@@ -19,6 +19,7 @@
      (assert (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?d)))
      (assert (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval national)))
      (assert (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval false)))
+     (assert (ag_bel (bel_type fluent) (bel_pname distance) (bel_pval 0)))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "    init speeed " crlf))
      (retract ?f)
 )
@@ -30,11 +31,11 @@
 ;;---------------------------------------
 
 
-;--- Sign forbidding a certain speeding
-(defrule AGENT::sign_speed_limit
+;--- semn forbidding a certain speeding
+(defrule AGENT::semn_speed_limit
      (declare (salience 40))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname forbidden_over ) (percept_pval ?limita))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname forbidden_over ) (percept_pval ?limita))
      ?s <- (ag_bel (bel_type fluent)(bel_pname speeding-limit) (bel_pval ?))
 =>
      (modify ?s (bel_pval ?limita))
@@ -42,11 +43,11 @@
      (retract ?f)
 )
 
-; ;--- Sign ending certain speed limit
-(defrule AGENT::sign_speed_limit_end
+; ;--- semn ending certain speed limit
+(defrule AGENT::semn_speed_limit_end
       (declare (salience 50))
       (timp (valoare ?t))
-      ?f <- (ag_percept (percept_pobj road_sign) (percept_pname end_of_forbidden_over) (percept_pval ?limita))
+      ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname end_of_forbidden_over) (percept_pval ?limita))
       ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit) (bel_pval ?current))
       ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?old))
 =>
@@ -54,11 +55,11 @@
       (retract ?f)
 )
 
-;--- Sign entering localitate
-(defrule AGENT::r-sign-entering-localitate
+;--- semn intra localitate -verif
+(defrule AGENT::r-semn-intra-localitate
      (declare (salience 51))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname localitate) (percept_pval entering))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname localitate) (percept_pval intra))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default)(bel_pval ?))
      ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval ?))
@@ -71,11 +72,11 @@
      (retract ?f)
 )
 
-;--- Sign we left localitate
-(defrule AGENT::r-sign-leaving-localitate
+;--- semn iesim din localitate -verif
+(defrule AGENT::r-semn-paraseste-localitate
     (declare (salience 51)) ; Importanța regulii (vezi notele de mai jos despre salience)
     (timp (valoare ?t)) ; Capturăm timpul
-    ?f <- (ag_percept (percept_pobj road_sign) (percept_pname localitate) (percept_pval leaving))
+    ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname localitate) (percept_pval paraseste))
     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit) (bel_pval ?sl)) ; Limită de viteză curentă
     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?sd)) ; Limită implicită
     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval ?inLoc)) ; Starea în localitate
@@ -91,11 +92,11 @@
 
 
 
-; ;--- Sign entering on a national european road
+; ;--- semn intra on a national european road -verif
 (defrule AGENT::r-drum-european
      (declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname drum_european) (percept_pval entering))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_european) (percept_pval intra))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default)(bel_pval ?))
      ?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval ?))
@@ -107,7 +108,7 @@
      (retract ?f)
 )
 
-;--- Gps info we are on a european road
+;--- Gps info ne aflam pe drum european -verif
 (defrule AGENT::r-drum-european-gps
      (declare (salience 50))
      (timp (valoare ?t))
@@ -123,26 +124,38 @@
      (retract ?f)
 )
 
-
-;---Sign zona rezidentiala
-(defrule AGENT::r-sign-zona-rezidentiala
+;---vede semn zona rezidentiala -verif
+(defrule AGENT::r-vede-semn-zona-rezidentiala
      (declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname zona_rezidentiala) (percept_pval ?val))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname zona_rezidentiala) (percept_pval vede) (percept_pdistance 150))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
-     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+     ?dis <- (ag_bel (bel_type fluent) (bel_pname distance) (bel_pdistance ?))
 =>
-     (if (eq ?val entering) then (modify ?s (bel_pval 20)))
-     (if (eq ?val leaving)  then (modify ?s (bel_pval ?def)))
+     (modify ?s (bel_pval 25))
+     (modify ?dis (bel_pval 150))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona rezidentiala"  crlf))
      (retract ?f)
 )
 
-;---Sign end of zona rezidentiala
-(defrule AGENT::r-sign-end-of-zona-rezidentiala
+;---semn zona rezidentiala -verif
+(defrule AGENT::r-semn-zona-rezidentiala-intra
      (declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname zona_rezidentiala) (percept_pval leaving))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname zona_rezidentiala) (percept_pval intra))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+=>
+     (modify ?s (bel_pval 20))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona rezidentiala"  crlf))
+     (retract ?f)
+)
+
+;---semn ca am iesit din zona rezidentiala -verif
+(defrule AGENT::r-semn-iesire-zona-rezidentiala
+     (declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname zona_rezidentiala) (percept_pval paraseste))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
 =>
@@ -151,25 +164,24 @@
      (retract ?f)
 )
 
-;---Sign zona pietonala
-(defrule AGENT::r-sign-zona-pietonala
+;---semn zona pietonala -verif
+(defrule AGENT::r-semn-zona-pietonala
      (declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname zona_pietonala) (percept_pval ?val))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname zona_pietonala) (percept_pval intra))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
 =>
-     (if (eq ?val entering) then (modify ?s (bel_pval 5)))
-     (if (eq ?val leaving)  then (modify ?s (bel_pval ?def)))
+     (modify ?s (bel_pval 5))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona pietonala"  crlf))
      (retract ?f)
 )
 
-;---Sign end of zona pietonala
-(defrule AGENT::r-sign-end-of-zona-pietonala
+;---semn am iesit din zona pietonala -verif
+(defrule AGENT::r-semn-iesire-zona-pietonala
      (declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname zona_pietonala) (percept_pval leaving))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname zona_pietonala) (percept_pval paraseste))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
 =>
@@ -178,25 +190,73 @@
      (retract ?f)
 )
 
-;---Sign drum in lucru
-(defrule AGENT::r-sign-drum-in-lucru-limitare-viteza
+;---vede semn drum in lucru cu precizarea limitei de 40 km/h -verif
+(defrule AGENT::r-vede-semn-drum-in-lucru-limitare-viteza
      (declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname drum_in_lucru) (percept_pval ?v))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_in_lucru) (percept_pval vede)(percept_pdistance 300))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval false)) ; Starea înafara localitatii , pe drum judetean
+     ?dis <- (ag_bel (bel_type fluent) (bel_pname distance)(bel_pdistance ?))
 =>
-     (modify ?s (bel_pval ?v))
-     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat pe un drum in lucru"  crlf))
+     (modify ?s (bel_pval 70))
+     (modify ?dis (bel_pval 300))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am vazut ca urmeaza sa intram pe un drum in lucru"  crlf))
      (retract ?f)
 )
 
-;--Sign trecere de pietoni
-(defrule AGENT::r-sign-trecere-de-pietoni
+;---semn drum in lucru cu precizarea limitei de 40 km/h -verif
+(defrule AGENT::r-semn-drum-in-lucru-limitare-viteza
+     (declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_in_lucru) (percept_pval intra))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     
+=>
+     (modify ?s (bel_pval 40))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am vazut ca urmeaza sa intram pe un drum in lucru"  crlf))
+     (retract ?f)
+)
+
+;---iesire semn drum in lucru cu precizarea limitei de 40 km/h -verif
+(defrule AGENT::r-iesire-semn-drum-in-lucru-limitare-viteza
+     (declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_in_lucru) (percept_pval iesire))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?default))
+     
+=>
+     (modify ?s (bel_pval ?default))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am vazut ca urmeaza sa intram pe un drum in lucru"  crlf))
+     (retract ?f)
+)
+
+;--vede semn trecere de pietoni -verif
+(defrule AGENT::r-vede-semn-trecere-de-pietoni
      (declare (salience 50))
      (timp (valoare ?t))
      ?b <- (ag_percept (percept_pobj gps_info) (percept_pname lanes) (percept_pval 1))
      ?p <- (ag_percept (percept_pobj pieton) (percept_pname distance_to_trecere) (percept_pval close))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname information_sign) (percept_pval trecere_de_pietoni))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname information_semn) (percept_pval trecere_de_pietoni) (percept_pdistance 150))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?dis <- (ag_bel (bel_type fluent) (bel_pname distance)(bel_pdistance ?))
+=>
+     (modify ?s (bel_pval 40))
+     (modify ?dis (bel_pdistance 150))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   Am intalnit o trecede de pietoni"  crlf))
+     (retract ?b)
+     (retract ?p)
+     (retract ?f)
+)
+
+;--semn trecere de pietoni -verif
+(defrule AGENT::r-semn-trecere-de-pietoni
+     (declare (salience 50))
+     (timp (valoare ?t))
+     ?b <- (ag_percept (percept_pobj gps_info) (percept_pname lanes) (percept_pval 1))
+     ?p <- (ag_percept (percept_pobj pieton) (percept_pname distance_to_trecere) (percept_pval close))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname information_semn) (percept_pval trecere_de_pietoni))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
 =>
      (modify ?s (bel_pval 30))
@@ -207,11 +267,11 @@
 )
 
 
-;--Senzorul masinii ne anunta ca am trecut de trecerea de pietoni
-(defrule AGENT::r-trecere-de-pietoni-end
+;--senzorul masinii ne anunta ca am trecut de trecerea de pietoni -verif
+(defrule AGENT::r-trecere-de-pietoni-iesire
      (declare (salience 50))
      (timp (valoare ?t))
-     ?p <- (ag_percept (percept_pobj car_sensor) (percept_pname trecere_de_pietoni) (percept_pval ended))
+     ?p <- (ag_percept (percept_pobj car_sensor) (percept_pname trecere_de_pietoni) (percept_pval iesire))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?default))
 =>
@@ -220,29 +280,75 @@
      (retract ?p)
 )
 
-
-;---Sign curba deosebit de periculoasa
-(defrule AGENT::r-sign-curba-deosebit-de-periculoasa
+;---vede semn curba deosebit de periculoasa localitate -verif
+(defrule AGENT::r-vede_semn-curba-deosebit-de-periculoasa-localitate
      (declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname warning_sign) (percept_pval curba_deosebit_de_periculoasa))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname vede_indicator_de_avertizare) (percept_pval curba_deosebit_de_periculoasa) (percept_pdistance 300))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?speed))
-     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval ?boolean))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval true))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?))
+     ?dis <- (ag_bel (bel_type fluent) (bel_pname distance) (bel_pdistance ?))
+=>
+     (modify ?d (bel_pval ?speed))
+     (modify ?s (bel_pval 30))
+     (modify ?dis (bel_pdistance 300))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intalnit o curba deosebit de periculoasa in localitate"  crlf))
+     (retract ?f)
+)
+
+;---semn curba deosebit de periculoasa localitate -verif
+(defrule AGENT::r-semn-curba-deosebit-de-periculoasa-localitate
+     (declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname indicator_de_avertizare) (percept_pval curba_deosebit_de_periculoasa))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?speed))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval true))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?))
 =>
      (modify ?d (bel_pval ?speed))
-     (if (eq ?boolean true) then (modify ?s (bel_pval 30)))
-     (if (eq ?boolean false) then (modify ?s (bel_pval 50)))
-     (if (eq ?*ag-in-debug* TRUE) then (printout t "   Am intalnit o curba deosebit de periculoasa"  crlf))
+     (modify ?s (bel_pval 30))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intalnit o curba deosebit de periculoasa in localitate"  crlf))
+     (retract ?f)
+)
+
+;---vede semn curba deosebit de periculoasa inafara localitatii -verif
+(defrule AGENT::r-vede-semn-curba-deosebit-de-periculoasa-inafara-localitatii
+     (declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname indicator_de_avertizare) (percept_pval curba_deosebit_de_periculoasa) (percept_pdistance 300))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?speed))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval false))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?))
+     ?dis <- (ag_bel (bel_type fluent) (bel_pname distance) (bel_pdistance ?))
+=>
+     (modify ?d (bel_pval ?speed))
+     (modify ?s (bel_pval 70))
+     (modify ?dis (bel_pdistance 300))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intalnit o curba deosebit de periculoasa in localitate"  crlf))
+     (retract ?f)
+)
+
+;---semn curba deosebit de periculoasa inafara localitatii -verif
+(defrule AGENT::r-semn-curba-deosebit-de-periculoasa-inafara-localitatii
+     (declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname indicator_de_avertizare) (percept_pval curba_deosebit_de_periculoasa))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?speed))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval false))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?))
+=>
+     (modify ?s (bel_pval 50))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intalnit o curba deosebit de periculoasa in localitate"  crlf))
      (retract ?f)
 )
 
 
-;--Senzorul masinii ne anunta cand am iesit din curba periculoasa
-(defrule AGENT::r-curba-deosebit-de-periculoasa-end
+;--Senzorul masinii ne anunta cand am iesit din curba periculoasa -verif
+(defrule AGENT::r-curba-deosebit-de-periculoasa-iesire
      (declare (salience 40))
      (timp (valoare ?t))
-     ?p <- (ag_percept (percept_pobj car_sensor) (percept_pname curba_deosebit_de_periculoasa) (percept_pval ended))
+     ?p <- (ag_percept (percept_pobj car_sensor) (percept_pname curba_deosebit_de_periculoasa) (percept_pval iesire))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?default))
 =>
@@ -252,25 +358,119 @@
 )
 
 
-;---Sign entering highway
+;--senzorul de ploaie ne atentioneaza ca incepe sa ploua pe autostrada verif
+(defrule AGENT::r-ploua-autostrada
+     (declare (salience 20))
+     (timp (valoare ?t))
+     ?p <- (ag_percept (percept_pobj senzor_ploaie) (percept_pname ploua) (percept_pval true))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval autostrada))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval ?boolean))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?))
+=>
+     (modify ?s (bel_pval 80)) 
+     (modify ?d (bel_pval 80))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   a inceput sa ploua" crlf))
+     (retract ?p)
+)
+
+;--senzorul de ploaie ne atentioneaza ca incepe sa ploua in localitate -verif
+(defrule AGENT::r-ploua-localitate
+     (declare (salience 20))
+     (timp (valoare ?t))
+     ?p <- (ag_percept (percept_pobj senzor_ploaie) (percept_pname ploua) (percept_pval true))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval true))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?))
+=>
+     (modify ?s (bel_pval 30)) 
+     (modify ?d (bel_pval 30))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   a inceput sa ploua" crlf))
+     (retract ?p)
+)
+;--senzorul de ploaie ne atentioneaza ca incepe sa ploua si masina nu se afla in localitate -verif
+(defrule AGENT::r-ploua-inafara-localitatii
+     (declare (salience 20))
+     (timp (valoare ?t))
+     ?p <- (ag_percept (percept_pobj senzor_ploaie) (percept_pname ploua) (percept_pval true))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval false))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?))
+=>
+     (modify ?s (bel_pval 50)) 
+     (modify ?d (bel_pval 50))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   a inceput sa ploua" crlf))
+     (retract ?p)
+)
+
+;--senzorul de ploaie ne atentioneaza ca nu mai ploua pe autostrada -verif
+(defrule AGENT::r-se-opreste-ploaia-autostrada
+     (declare (salience 40))
+     (timp (valoare ?t))
+     ?p <- (ag_percept (percept_pobj senzor_ploaie) (percept_pname ploua) (percept_pval false))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit) (bel_pval ?))
+     ?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval autostrada))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval ?boolean))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?))
+=>
+     
+     (modify ?s (bel_pval 130)) 
+     (modify ?d (bel_pval 130))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   ploaia s-a oprit, continuam drumul pe autostrada" crlf))
+     (retract ?p)
+)
+
+;--senzorul de ploaie ne atentioneaza ca nu mai ploua pe drum european -verif
+(defrule AGENT::r-se-opreste-ploaia-drum-european
+     (declare (salience 40))
+     (timp (valoare ?t))
+     ?p <- (ag_percept (percept_pobj senzor_ploaie) (percept_pname ploua) (percept_pval false))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit) (bel_pval ?))
+     ?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval european))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval ?boolean))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?))
+=>
+     
+     (modify ?s (bel_pval 100)) ; Setăm viteza curentă la 100
+     (modify ?d (bel_pval 100)) ; Setăm viteza implicită la 100
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   ploaia s-a oprit, continuam pe drum european" crlf))
+     (retract ?p)
+)
+
+;--senzorul de ploaie ne atentioneaza ca nu mai ploua in localitate -verif
+(defrule AGENT::r-se-opreste-ploaia-localitate
+     (declare (salience 40))
+     (timp (valoare ?t))
+     ?p <- (ag_percept (percept_pobj senzor_ploaie) (percept_pname ploua) (percept_pval false))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit) (bel_pval ?))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval true))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?))
+=>
+     
+     (modify ?s (bel_pval 50)) ; Setăm viteza curentă la 100
+     (modify ?d (bel_pval 50)) ; Setăm viteza implicită la 100
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   ploaia s-a oprit, continuam pe drum european" crlf))
+     (retract ?p)
+)
+
+
+
+;---semn intra pe autostrada -verif
 (defrule AGENT::r-sign-autostrada
      (declare (salience 50))
      (timp (valoare ?t))
      ?f <- (ag_percept (percept_pobj road_sign) (percept_pname autostrada) (percept_pval entering))
-     ?c <- (ag_percept (percept_pobj gps_info) (percept_pname country) (percept_pval ?country))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?))
      ?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval ?))
 =>
-     (if (eq ?country Germania) then (modify ?s (bel_pval none)) (modify ?d (bel_pval none))
-     else (modify ?s (bel_pval 130)) (modify ?d (bel_pval 130)))
+     (modify ?s (bel_pval 130)) (modify ?d (bel_pval 130))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in localitate"  crlf))
      (modify ?l (bel_pval autostrada))
      (retract ?f)
-     (retract ?c)
 )
-
-;---Sign exiting highway
+ 
+;---semn ca am iesit de pe autostrada -verif
 (defrule AGENT::sign-autostrada-exit
      (declare (salience 50))
      (timp (valoare ?t))
@@ -286,94 +486,54 @@
      (retract ?f)
 )
 
-;--Senzorul de ploaie ne atentioneaza ca incepe sa ploua
-(defrule AGENT::r-raining
-     (declare (salience 20))
-     (timp (valoare ?t))
-     ?p <- (ag_percept (percept_pobj raining_sensor) (percept_pname is_raining) (percept_pval true))
-     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
-     ?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval ?road))
-     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval ?boolean))
-=>
-     (if (eq ?road autostrada) then (modify ?s (bel_pval 80)) else
-       (if (eq ?boolean true) then (modify ?s (bel_pval 30)))
-       (if (eq ?boolean false) then (modify ?s (bel_pval 50)))
-     )
-     (if (eq ?*ag-in-debug* TRUE) then (printout t "   a inceput sa ploua"  crlf))
-     (retract ?p)
-)
 
-;--Senzorul de ploaie ne atentioneaza ca nu mai ploua
-(defrule AGENT::r-rain-stops
-     (declare (salience 40))
-     (timp (valoare ?t))
-     ?p <- (ag_percept (percept_pobj raining_sensor) (percept_pname is_raining) (percept_pval false))
-     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
-     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?default))
-=>
-     (modify ?s (bel_pval ?default))
-     (if (eq ?*ag-in-debug* TRUE) then (printout t "   ploaia a incetat"  crlf))
-     (retract ?p)
-)
-
-
-;--Semn de trecere de frontiera
+;--semn de trecere de frontiera -verif
 (defrule AGENT::r-trecere-de-frontiera
      (declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname information_sign) (percept_pval punct_vamal))
-     ?g <- (ag_percept (percept_pobj road_sign) (percept_pname country) (percept_pval ?country))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname information_semn) (percept_pval punct_vamal))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?))
      ?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval autostrada))
 =>
-     (if (eq ?country Germania) then (modify ?s (bel_pval none)) (modify ?d (bel_pval none))
-     else (modify ?s (bel_pval 130)) (modify ?d (bel_pval 130))
-     )
+    (modify ?s (bel_pval 130)) 
+    (modify ?d (bel_pval 130))
+     
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am trecut de curba deosebit de periculoasa"  crlf))
      (retract ?f)
-     (retract ?g)
 )
 
-
-
-
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;; Me ;;;;;;;;;;;;;;;;;;;;;;;;;;
-;---Sign zona sens giratoriu
-(defrule AGENT::r_sign_zona_sens_giratoriu
+;---vede semn zona sens giratoriu -verif
+(defrule AGENT::r_vede_semn_zona_sens_giratoriu
      (declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname zona_sens_giratoriu) (percept_pval ?val))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname zona_sens_giratoriu) (percept_pval vede) (percept_pdistance 300))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+     ?dis <-(ag_bel (bel_type fluent) (bel_pname distance) (bel_pdistance ?))
+=>
+     (modify ?s (bel_pval 70))
+     (modify ?dis (bel_pdistance 300))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona de sens giratoriu"  crlf))
+     (retract ?f)
+)
+
+;---semn zona sens giratoriu -verif
+(defrule AGENT::r_semn_zona_sens_giratoriu
+     (declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname zona_sens_giratoriu) (percept_pval intra))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
 =>
-     (if (eq ?val entering) then (modify ?s (bel_pval 30)))
-     (if (eq ?val leaving)  then (modify ?s (bel_pval ?def)))
+     (modify ?s (bel_pval 30))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona de sens giratoriu"  crlf))
-	 ;;(printout t "   am intrat in zona de sens giratoriu"  crlf)
      (retract ?f)
 )
 
-;---Sign end zona sens giratoriu
-(defrule AGENT::r_sign_end_sens_giratoriu
-	(declare (salience 50))
-     (timp (valoare ?t))
-     ?p <- (ag_percept (percept_pobj car_sensor) (percept_pname zona_sens_giratoriu) (percept_pval ended))
-     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
-     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?default))
-=>
-     (modify ?s (bel_pval ?default))
-     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am iesit din zona de sens giratoriu"  crlf))
-	 ;;(printout t "   am iesit din zona de sens giratoriu"  crlf)
-	 (retract ?p)
-)
 
-;--- Gps info iesire sens giratoriu 
-(defrule AGENT::r-end-sens-giratoriu-gps
+;--- Gps info iesire sens giratoriu -verif
+(defrule AGENT::r-iesire-sens-giratoriu-gps
      (declare (salience 50))
      (timp (valoare ?t))
      ?f <- (ag_percept (percept_pobj gps_info) (percept_pname zona_sens_giratoriu) (percept_pval false))
@@ -385,127 +545,220 @@
      (modify ?d (bel_pval ?def))
      (modify ?l (bel_pval ?r_t))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am iesit din sensul giratoriu GPS"  crlf))
-	 ;;(printout t "   am iesit din sensul giratoriu GPS"  crlf)
-	 (retract ?f)
+	(retract ?f)
 )
 
-
-;---Sign drum cu denivelari (viteza = 30 in localitate si 50 in afara)
-(defrule AGENT::r_sign_drum_cu_denivelari
+;---vede semn drum cu denivelari (viteza = 30 in localitate) -verif
+(defrule AGENT::r_vede_semn_drum_cu_denivelari_localitate
      (declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname drum_cu_denivelari) (percept_pval entering))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_cu_denivelari) (percept_pval vede) (percept_pdistance 150))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?speed))
-	 ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval ?boolean))
+	?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval true))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default)(bel_pval ?))
+     ?dis <-(ag_bel (bel_type fluent) (bel_pname distance)(bel_pdistance ?))
+=>
+     (modify ?d (bel_pval ?speed))
+     (modify ?s (bel_pval 40))
+     (modify ?dis (bel_pdistance 150))
+	(if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat pe un drum cu denivelari"  crlf))
+     (retract ?f)
+)
+
+;---semn drum cu denivelari (viteza = 30 in localitate) -verif
+(defrule AGENT::r_semn_drum_cu_denivelari_localitate
+     (declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_cu_denivelari) (percept_pval intra))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?speed))
+	?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval true))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default)(bel_pval ?))
+=>
+     (modify ?s (bel_pval 30))
+	(if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat pe un drum cu denivelari"  crlf))
+     (retract ?f)
+)
+
+;---semn drum cu denivelari (viteza = 30 in localitate si 50 in afara) -verif
+(defrule AGENT::r_semn_drum_cu_denivelari_inafara_localitate
+     (declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_cu_denivelari) (percept_pval intra))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?speed))
+	?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval false))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default)(bel_pval ?))
 =>
      (modify ?d (bel_pval ?speed))
-     (if (eq ?boolean true) then (modify ?s (bel_pval 30)))
-     (if (eq ?boolean false) then (modify ?s (bel_pval 50)))
-	 (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat pe un drum cu denivelari"  crlf))
-	 ;;(printout t "   am intrat pe un drum cu denivelari"  crlf)
+     (modify ?s (bel_pval 50))
+	(if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat pe un drum cu denivelari"  crlf))
      (retract ?f)
 )
 
 
-;--- Sign end drum cu denivelari (viteza = 30 in localitate si 50 in afara)
-(defrule AGENT::r_sign_end_drum_cu_denivelari
+;--- semn ca se sfarseste drumul cu denivelari (viteza = 30 in localitate si 50 in afara) -verif
+(defrule AGENT::r_semn_iesire_drum_cu_denivelari
 	(declare (salience 50))
      (timp (valoare ?t))
-     ?p <- (ag_percept (percept_pobj car_sensor) (percept_pname drum_cu_denivelari) (percept_pval ended))
+     ?p <- (ag_percept (percept_pobj car_sensor) (percept_pname drum_cu_denivelari) (percept_pval iesire))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?default))
 =>
      (modify ?s (bel_pval ?default))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am iesit din zona de drum cu denivelari"  crlf))
-	 ;;(printout t "   am iesit din zona de drum cu denivelari"  crlf)
-	 (retract ?p)
+	(retract ?p)
 )
 
-
-
-;--- Sign drum offroad (viteza = 20 in localitate si in afara)
-(defrule AGENT::r_sign_drum_offroad
+;--- vede semn drum offroad (viteza = 20 in localitate si in afara) -verif
+(defrule AGENT::r_vede_semn_drum_offroad
 	(declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname drum_offroad) (percept_pval ?val))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_offroad) (percept_pval vede) (percept_pdistance 150))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?dis <- (ag_bel (bel_type fluent) (bel_pname distance)(bel_pdistance ?))
+=>
+     (modify ?s (bel_pval 40)) 
+     (modify ?dis (bel_pdistance 150)) 
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat pe drum offroad"  crlf))
+     (retract ?f)
+)
+
+;--- semn drum offroad (viteza = 20 in localitate si in afara) -verif
+(defrule AGENT::r_semn_drum_offroad
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_offroad) (percept_pval intra))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default)(bel_pval ?def))
 =>
-     (if (eq ?val entering) then (modify ?s (bel_pval 20)) ) 
+     (modify ?s (bel_pval 20)) 
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat pe drum offroad"  crlf))
-	 ;;(printout t "   am intrat pe drum offroad"  crlf)
      (retract ?f)
 )
 
-;--- Sign end drum offroad (viteza = 20 in localitate si in afara)
-(defrule AGENT::r_sign_end_drum_offroad
+;--- semn iesire de pe drum offroad (viteza = 20 in localitate si in afara) -verif
+(defrule AGENT::r_semn_iesire_drum_offroad
 	(declare (salience 40))
      (timp (valoare ?t))
-     ?p <- (ag_percept (percept_pobj car_sensor) (percept_pname drum_offroad) (percept_pval ended))
+     ?p <- (ag_percept (percept_pobj car_sensor) (percept_pname drum_offroad) (percept_pval iesire))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?default))
-	 ?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval ?r_t))
+	?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval ?r_t))
 =>
      (modify ?s (bel_pval ?default))
-	 (modify ?d (bel_pval ?default))
-	 (modify ?l (bel_pval ?r_t))
+	(modify ?d (bel_pval ?default))
+	(modify ?l (bel_pval ?r_t))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am iesit din zona de drum offroad"  crlf))
-	 ;;(printout t "   am iesit din zona de drum offroad"  crlf)
-	 (retract ?p)
+	(retract ?p)
 )
 
-
-;--- Sign zona in care se afla copii (viteza = 30 in localitate si 50 in afara)
-(defrule AGENT::r_sign_atentie_copii
+;--- vede semn zona in care se afla copii 30km/h -verif
+(defrule AGENT::r_vede_semn_atentie_copii_in_localitate
 	(declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname atentie_copii) (percept_pval ?val))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname atentie_copii) (percept_pval vede) (percept_pdistance 150))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval true))
+     ?dis <-(ag_bel (bel_type fluent) (bel_pname distance)(bel_pdistance ?))
 =>
-     (if (eq ?val entering) then (modify ?s (bel_pval 30)))
-     (if (eq ?val leaving)  then (modify ?s (bel_pval ?def)))
-     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona scoala"  crlf))
-	 ;;(printout t "   am intrat in zona de atentie copii"  crlf)
+     (modify ?s (bel_pval 40))
+     (modify ?dis (bel_pdistance 150))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona atentie copii"  crlf))
      (retract ?f)
 )
 
-;--- Sign end zona atentie copii (viteza = 30 in localitate si 50 in afara)
-(defrule AGENT::r_sign_end_atentie_copii
+;--- semn zona in care se afla copii 30km/h -verif
+(defrule AGENT::r_semn_atentie_copii_in_localitate
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname atentie_copii) (percept_pval intra))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval true))
+=>
+     (modify ?s (bel_pval 30))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona atentie copii in localitate"  crlf))
+     (retract ?f)
+)
+
+;--- semn iesire din zona atentie copii 30km/h -verif
+(defrule AGENT::r_semn_iesire_atentie_copii_in_localitate
 	(declare (salience 50))
      (timp (valoare ?t))
      ?f <- (ag_percept (percept_pobj gps_info) (percept_pname atentie_copii) (percept_pval false))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default)(bel_pval ?def))
      ?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval ?r_t))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval true))
 =>
      (modify ?s (bel_pval ?def))
      (modify ?d (bel_pval ?def))
      (modify ?l (bel_pval ?r_t))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am iesit din zona de atentie copii"  crlf))
-	 ;;(printout t "   am iesit din zona de atentie copii"  crlf)
-	 (retract ?f)
+	(retract ?f)
 )
 
-
-;--- Sign drumuri private (dupa caz viteza = 5, 10, 15 sau 30 km/h)
-(defrule AGENT::r_sign_drumuri_private_5
+;--- vede semn zona in care se afla copii 50km/h -verif
+(defrule AGENT::r_vede_semn_atentie_copii_inafara_localitatii
 	(declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname drum_privat_5) (percept_pval ?val))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname atentie_copii) (percept_pval vede) (percept_pdistance 300))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval false))
+     ?dis <-(ag_bel (bel_type fluent) (bel_pname distance)(bel_pdistance ?))
 =>
-     (if (eq ?val entering) then (modify ?s (bel_pval 5)))
-     (if (eq ?val leaving)  then (modify ?s (bel_pval ?def)))
-     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona de drum privat 5"  crlf))
-	 ;;(printout t "   am intrat in zona de drum privat 5"  crlf)
+     (modify ?s (bel_pval 70))
+     (modify ?dis (bel_pdistance 300))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona atentie copii"  crlf))
      (retract ?f)
 )
 
-;--- Sign end drumuri private (dupa caz viteza = 5, 10, 15 sau 30 km/h)
-(defrule AGENT::r_sign_end_drumuri_private_5
+;--- semn zona in care se afla copii 50km/h -verif
+(defrule AGENT::r_semn_atentie_copii_inafara_localitatii
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname atentie_copii) (percept_pval intra))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval false))
+=>
+     (modify ?s (bel_pval 50))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona atentie copii iafara localitatii"  crlf))
+     (retract ?f)
+)
+
+;--- semn iesire din zona atentie copii 30km/h -verif
+(defrule AGENT::r_semn_iesire_atentie_copii_inafara_localitatii
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj gps_info) (percept_pname atentie_copii) (percept_pval false))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default)(bel_pval ?def))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval false))
+=>
+     (modify ?s (bel_pval ?def))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am iesit din zona de atentie copii"  crlf))
+	(retract ?f)
+)
+
+
+;--- semn drumuri private (dupa caz viteza = 5, 10, 15 sau 30 km/h) -verif
+(defrule AGENT::r_semn_drumuri_private_5
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_privat_5) (percept_pval intra))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+=>
+     (modify ?s (bel_pval 5))
+     (modify ?s (bel_pval ?def))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona de drum privat 5"  crlf))
+     (retract ?f)
+)
+
+;--- semn iesire drumuri private (dupa caz viteza = 5, 10, 15 sau 30 km/h) -verif
+(defrule AGENT::r_semn_iesire_drumuri_private_5
 	(declare (salience 50))
      (timp (valoare ?t))
      ?f <- (ag_percept (percept_pobj gps_info) (percept_pname drum_privat_5) (percept_pval false))
@@ -517,28 +770,38 @@
      (modify ?d (bel_pval ?def))
      (modify ?l (bel_pval ?r_t))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am iesit din zona de drum privat 5"  crlf))
-	 ;;(printout t "   am iesit din zona de drum privat 5"  crlf)
-	 (retract ?f)
+	(retract ?f)
 )
 
-
-;--- Sign drumuri private (dupa caz viteza = 5, 10, 15 sau 30 km/h)
-(defrule AGENT::r_sign_drumuri_private_10
+;--- vede semn drumuri private (dupa caz viteza = 5, 10, 15 sau 30 km/h) -verif
+(defrule AGENT::r_vede_semn_drumuri_private_10
 	(declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname drum_privat_10) (percept_pval ?val))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_privat_10) (percept_pval vede) (percept_pdistance 300))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
-     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+     ?dis <- (ag_bel (bel_type fluent) (bel_pname distance) (bel_pdistance ?))
 =>
-     (if (eq ?val entering) then (modify ?s (bel_pval 10)))
-     (if (eq ?val leaving)  then (modify ?s (bel_pval ?def)))
+     (modify ?s (bel_pval 30))
+     (modify ?dis (bel_pdistance 300))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona de drum privat 10"  crlf))
-	 ;;(printout t "   am intrat in zona de drum privat 10"  crlf)
      (retract ?f)
 )
 
-;--- Sign end drumuri private (dupa caz viteza = 5, 10, 15 sau 30 km/h)
-(defrule AGENT::r_sign_end_drumuri_private_10
+;--- semn drumuri private (dupa caz viteza = 5, 10, 15 sau 30 km/h) -verif
+(defrule AGENT::r_semn_drumuri_private_10
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_privat_10) (percept_pval intra))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+=>
+     (modify ?s (bel_pval 10))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona de drum privat 10"  crlf))
+     (retract ?f)
+)
+
+;--- semn iesire drumuri private (dupa caz viteza = 5, 10, 15 sau 30 km/h) -verif
+(defrule AGENT::r_semn_end_drumuri_private_10
 	(declare (salience 50))
      (timp (valoare ?t))
      ?f <- (ag_percept (percept_pobj gps_info) (percept_pname drum_privat_10) (percept_pval false))
@@ -550,27 +813,24 @@
      (modify ?d (bel_pval ?def))
      (modify ?l (bel_pval ?r_t))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am iesit din zona de drum privat 10"  crlf))
-	 ;;(printout t "   am iesit din zona de drum privat 10"  crlf)
-	 (retract ?f)
+	(retract ?f)
 )
 
-;--- Sign drumuri private (dupa caz viteza = 5, 10, 15 sau 30 km/h)
-(defrule AGENT::r_sign_drumuri_private_15
+;--- semn drumuri private (dupa caz viteza = 5, 10, 15 sau 30 km/h) -verif
+(defrule AGENT::r_semn_drumuri_private_15
 	(declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname drum_privat_15) (percept_pval ?val))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_privat_15) (percept_pval intra))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
 =>
-     (if (eq ?val entering) then (modify ?s (bel_pval 15)))
-     (if (eq ?val leaving)  then (modify ?s (bel_pval ?def)))
+     (modify ?s (bel_pval 15))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona de drum privat 15"  crlf))
-	 ;;(printout t "   am intrat in zona de drum privat 15"  crlf)
      (retract ?f)
 )
 
-;--- Sign end drumuri private (dupa caz viteza = 5, 10, 15 sau 30 km/h)
-(defrule AGENT::r_sign_end_drumuri_private_15
+;--- semn iesire drumuri private (dupa caz viteza = 5, 10, 15 sau 30 km/h) -verif
+(defrule AGENT::r_semn_end_drumuri_private_15
 	(declare (salience 50))
      (timp (valoare ?t))
      ?f <- (ag_percept (percept_pobj gps_info) (percept_pname drum_privat_15) (percept_pval false))
@@ -582,27 +842,24 @@
      (modify ?d (bel_pval ?def))
      (modify ?l (bel_pval ?r_t))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am iesit din zona de drum privat 15"  crlf))
-	 ;;(printout t "   am iesit din zona de drum privat 15"  crlf)
-	 (retract ?f)
+	(retract ?f)
 )
 
-;--- Sign drumuri private (dupa caz viteza = 5, 10, 15 sau 30 km/h)
-(defrule AGENT::r_sign_drumuri_private_30
+;--- semn drumuri private (dupa caz viteza = 5, 10, 15 sau 30 km/h) -verif
+(defrule AGENT::r_semn_drumuri_private_30
 	(declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname drum_privat_30) (percept_pval ?val))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_privat_30) (percept_pval intra))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
 =>
-     (if (eq ?val entering) then (modify ?s (bel_pval 30)))
-     (if (eq ?val leaving)  then (modify ?s (bel_pval ?def)))
+     (modify ?s (bel_pval 30))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona de drum privat 30"  crlf))
-	 ;;(printout t "   am intrat in zona de drum privat 30"  crlf)
      (retract ?f)
 )
 
-;--- Sign end drumuri private (dupa caz viteza = 5, 10, 15 sau 30 km/h)
-(defrule AGENT::r_sign_end_drumuri_private_30
+;--- semn iesire drumuri private (dupa caz viteza = 5, 10, 15 sau 30 km/h) -verif
+(defrule AGENT::r_semn_end_drumuri_private_30
 	(declare (salience 50))
      (timp (valoare ?t))
      ?f <- (ag_percept (percept_pobj gps_info) (percept_pname drum_privat_30) (percept_pval false))
@@ -614,84 +871,118 @@
      (modify ?d (bel_pval ?def))
      (modify ?l (bel_pval ?r_t))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am iesit din zona de drum privat 30"  crlf))
-	 ;;(printout t "   am iesit din zona de drum privat 30"  crlf)
-	 (retract ?f)
+	(retract ?f)
 )
 
-
-;--- Sign dispozitive de limitare viteza (denivelari/hopuri/bumpere): viteza = 30km/h
-(defrule AGENT::r_sign_dispozitive_limitare_viteza
+;--- vede semn dispozitive de limitare viteza (denivelari/hopuri/bumpere): viteza = 30km/h -verif
+(defrule AGENT::r_vede_semn_dispozitive_limitare_viteza
 	(declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname dispozitive_limitare_viteza) (percept_pval ?val))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname dispozitive_limitare_viteza) (percept_pval vede) (percept_pdistance 300))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+     ?dis <- (ag_bel (bel_type fluent) (bel_pname distance) (bel_pval ?))
 =>
-     (if (eq ?val entering) then (modify ?s (bel_pval 30)))
-     (if (eq ?val leaving)  then (modify ?s (bel_pval ?def)))
+     (modify ?s (bel_pval 40))
+     (modify ?dis (bel_pdistance 300))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona unde sunt dispozitive de limitare pentru viteza"  crlf))
-	 ;;(printout t "   am intrat in zona unde sunt dispozitive de limitare pentru viteza"  crlf)
      (retract ?f)
 )
 
-;--- Sign end dispozitive de limitare viteza (denivelari/hopuri/bumpere): viteza = 30km/h
-(defrule AGENT::r_sign_end_dispozitive_limitare_viteza
+;--- semn dispozitive de limitare viteza (denivelari/hopuri/bumpere): viteza = 30km/h -verif
+(defrule AGENT::r_semn_dispozitive_limitare_viteza
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname dispozitive_limitare_viteza) (percept_pval intra))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+=>
+     (modify ?s (bel_pval 30))
+     (modify ?d (bel_pval 30))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona unde sunt dispozitive de limitare pentru viteza"  crlf))
+     (retract ?f)
+)
+
+;--- semn iesire dispozitive de limitare viteza (denivelari/hopuri/bumpere): viteza = 30km/h -verif
+(defrule AGENT::r_semn_end_dispozitive_limitare_viteza
 	(declare (salience 40))
      (timp (valoare ?t))
-     ?p <- (ag_percept (percept_pobj car_sensor) (percept_pname dispozitive_limitare_viteza) (percept_pval ended))
+     ?p <- (ag_percept (percept_pobj car_sensor) (percept_pname dispozitive_limitare_viteza) (percept_pval iesire))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
-     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?default))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval true))
 =>
-     (modify ?s (bel_pval ?default))
+     (modify ?s (bel_pval 50))
+     (modify ?d (bel_pval 50))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am iesit din zona unde sunt dispozitive de limitare pentru viteza"  crlf))
-	 ;;(printout t "   am iesit din zona unde sunt dispozitive de limitare pentru viteza"  crlf)
      (retract ?p)
 )
 
 
-;--- Sign trecere linie de cale ferata cu bariera (viteza = 5 km/h)
-(defrule AGENT::r_sign_trecere_de_cale_ferata_cu_bariera
+;--- semn trecere linie de cale ferata cu bariera coborata (viteza = 0 km/h) -verif
+(defrule AGENT::r_semn_trecere_de_cale_ferata_cu_bariera
 	(declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname trecere_de_cale_ferata_cu_bariera) (percept_pval ?val))
-	 ?p <- (ag_percept (percept_pobj senzor_bariera) (percept_pname perceptie_bariera) (percept_pval ?is_there))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname trecere_de_cale_ferata_cu_bariera) (percept_pval intra))
+	?p <- (ag_percept (percept_pobj senzor_bariera) (percept_pname perceptie_bariera) (percept_pval bariera))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
 =>
-     (if (and (eq ?val entering) (eq ?is_there barrier) ) then (modify ?s (bel_pval 0))
-								(if (eq ?*ag-in-debug* TRUE) then (printout t "   Suntem la o trecere de cale ferata cu bariera si asteptam sa se ridice bariera"  crlf) )
-								;;(printout t "   Suntem la o trecere de cale ferata cu bariera si asteptam sa se ridice bariera"  crlf) 
-	)
-	 (if (and (eq ?val entering) (eq ?is_there no_barrier) ) then (modify ?s (bel_pval 30)) 
-								(if (eq ?*ag-in-debug* TRUE) then (printout t "   Suntem la o trecere de cale ferata cu bariera, iar bariera este sus"  crlf) )
-								;;(printout t "   Suntem la o trecere de cale ferata cu bariera, iar bariera este sus"  crlf)
-	)
-     (if (eq ?val leaving)  then (modify ?s (bel_pval ?def)))
-     ;;(if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona de trecere cu cale ferata cu bariera"  crlf))
+     (modify ?s (bel_pval 0))
+	(if (eq ?*ag-in-debug* TRUE) then (printout t "   Suntem la o trecere de cale ferata cu bariera si asteptam sa se ridice bariera"  crlf) )
      (retract ?f)
-	 (retract ?p)
+	(retract ?p)
 )
 
-;--- Sign end trecere de cale ferata cu bariera (viteza = 5 km/h)
-(defrule AGENT::r_sign_end_trecere_de_cale_ferata_cu_bariera
+;--- vede semn trecere linie de cale ferata cu bariera ridicata (viteza = 5 km/h) -verif
+(defrule AGENT::r_vede_semn_trecere_de_cale_ferata_cu_bariera
 	(declare (salience 50))
      (timp (valoare ?t))
-     ?p <- (ag_percept (percept_pobj car_sensor) (percept_pname trecere_de_cale_ferata_cu_bariera) (percept_pval ended))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname trecere_de_cale_ferata_cu_bariera) (percept_pval vede) (percept_pdistance 300))
+	?p <- (ag_percept (percept_pobj senzor_bariera) (percept_pname perceptie_bariera) (percept_pval no_bariera))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?dis <- (ag_bel (bel_type fluent) (bel_pname distance) (bel_pdistance ?))
+=>
+     (modify ?s (bel_pval 30)) 
+	(if (eq ?*ag-in-debug* TRUE) then (printout t "   Suntem la o trecere de cale ferata cu bariera, iar bariera este sus"  crlf) )
+     (retract ?f)
+	(retract ?p)
+)
+
+;--- semn trecere linie de cale ferata cu bariera ridicata (viteza = 5 km/h) -verif
+(defrule AGENT::r_semn_trecere_de_cale_ferata_cu_bariera
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname trecere_de_cale_ferata_cu_bariera) (percept_pval intra))
+	?p <- (ag_percept (percept_pobj senzor_bariera) (percept_pname perceptie_bariera) (percept_pval no_bariera))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+=>
+     (modify ?s (bel_pval 5)) 
+	(if (eq ?*ag-in-debug* TRUE) then (printout t "   Suntem la o trecere de cale ferata cu bariera, iar bariera este sus"  crlf) )
+     (retract ?f)
+	(retract ?p)
+)
+
+;--- semn iesire trecere de cale ferata cu bariera (viteza = 5 km/h) -verif
+(defrule AGENT::r_semn_end_trecere_de_cale_ferata_cu_bariera
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?p <- (ag_percept (percept_pobj car_sensor) (percept_pname trecere_de_cale_ferata_cu_bariera) (percept_pval iesire))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?default))
 =>
      (modify ?s (bel_pval ?default))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am iesit din zona de trecere a caii ferate cu bariera prin senzori"  crlf))
-	 ;;(printout t "   am iesit din zona de trecere a caii ferate cu bariera prin senzori"  crlf)
      (retract ?p)
 )
 
 
-;--- Sign intra pe un drum judetean
+;--- semn intra pe un drum judetean -verif
 (defrule AGENT::r_drum_judetean
      (declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname drum_judetean) (percept_pval entering))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_judetean) (percept_pval intra))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default)(bel_pval ?))
      ?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval ?))
@@ -700,11 +991,10 @@
      (modify ?d (bel_pval 90))
      (modify ?l (bel_pval judetean))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat pe un drum judetean"  crlf))
-	 ;;(printout t "   am intrat pe un drum judetean"  crlf)
      (retract ?f)
 )
 
-;--- Gps info - suntem pe un drum judetean
+;--- Gps info - suntem pe un drum judetean -verif
 (defrule AGENT::r_drum_judetean_gps
      (declare (salience 50))
      (timp (valoare ?t))
@@ -717,11 +1007,10 @@
      (modify ?d (bel_pval 90))
      (modify ?l (bel_pval judetean))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat pe un drum judetean folosind GPS"  crlf))
-	 ;;(printout t "   am intrat pe un drum judetean folosind GPS"  crlf)
      (retract ?f)
 )
 
-;--- Gps info - NU mai suntem pe un drum judetean
+;--- Gps info - NU mai suntem pe un drum judetean -verif
 (defrule AGENT::r_drum_judetean_gps_end
      (declare (salience 50))
      (timp (valoare ?t))
@@ -733,28 +1022,38 @@
      (modify ?s (bel_pval ?def))
      (modify ?l (bel_pval ?r_t))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am iesit de pe un drum judetean folosind GPS"  crlf))
-	 ;;(printout t "   am intrat pe un drum judetean folosind GPS"  crlf)
      (retract ?f)
 )
 
 
+;--- vede semn trecere dintr-o granita in alta (dintr-o tara in alta) -verif
+(defrule AGENT::r_vede_trecere_granita
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname trecere_granita) (percept_pval vede) (percept_pdistance 150))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?dis <- (ag_bel (bel_type fluent) (bel_pname distance) (bel_pdistance ?))
+=>
+     (modify ?s (bel_pval 5))
+     (modify ?dis (bel_pdistance 150))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   suntem in procesul de trecere dintr-o tara in alta"  crlf))
+     (retract ?f)
+)
 
-;--- Sign trecere dintr-o granita in alta (dintr-o tara in alta)
+;--- semn trecere dintr-o granita in alta (dintr-o tara in alta) -verif
 (defrule AGENT::r_trecere_granita
 	(declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname trecere_granita) (percept_pval ?val))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname trecere_granita) (percept_pval intra))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
 =>
-     (if (eq ?val entering) then (modify ?s (bel_pval 40)))
-     (if (eq ?val leaving)  then (modify ?s (bel_pval ?def)))
+     (modify ?s (bel_pval 0))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   suntem in procesul de trecere dintr-o tara in alta"  crlf))
-	 ;;(printout t "   suntem in procesul de trecere dintr-o tara in alta"  crlf)
      (retract ?f)
 )
 
-;--- Sign end GPS trecere dintr-o granita in alta (dintr-o tara in alta)
+;--- semn iese GPS trecere dintr-o granita in alta (dintr-o tara in alta) -verif
 (defrule AGENT::r_end_trecere_granita
 	(declare (salience 50))
      (timp (valoare ?t))
@@ -767,41 +1066,59 @@
      (modify ?d (bel_pval ?def))
      (modify ?l (bel_pval ?r_t))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am trecut granita !!!"  crlf))
-	 ;;(printout t "   am trecut granita !!!"  crlf)
-	 (retract ?f)
-)
-
-
-;--- Sign atentionare pericol de animale
-(defrule AGENT::r_drum_animale_localitate
-	(declare (salience 50))
-     (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname pericol_animale) (percept_pval ?val))
-     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
-     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
-	 ?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval ?road))
-     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval ?locality))
-=>
-     ;;;;(if (eq ?val entering) then (modify ?s (bel_pval 30)))
-	 (if (eq ?val entering) then  
-				(if (eq ?road autostrada) then (modify ?s (bel_pval 50)) 
-				else
-					(if (eq ?locality true) then (modify ?s (bel_pval 30)) 
-						(if (eq ?*ag-in-debug* TRUE) then (printout t "   suntem in zona de pericol de animale in localitate"  crlf))
-						;;(printout t "   suntem in zona de pericol de animale in localitate"  crlf) 
-					)
-					(if (eq ?locality false) then (modify ?s (bel_pval 50)) 
-						(if (eq ?*ag-in-debug* TRUE) then (printout t "   suntem in zona de pericol de animale in afara localitatii"  crlf) )
-						;;(printout t "   suntem in zona de pericol de animale in afara localitatii"  crlf) 
-					)
-				)  
-	 )
-     (if (eq ?*ag-in-debug* TRUE) then (printout t "   suntem in zona de pericol de animale"  crlf))
-	 ;;(printout t "   suntem in zona de pericol de animale"  crlf)
      (retract ?f)
 )
 
-;--- Gps info intalnim indicatorul de atentionare la animale in localitate
+
+;--- semn atentionare pericol de animale in localtiate -verif
+(defrule AGENT::r_drum_animale_localitate
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname pericol_animale) (percept_pval intra))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+	 ?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval ?road))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval true))
+=>
+	  
+	(modify ?s (bel_pval 30)) 
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   suntem in zona de pericol de animale in localitate"  crlf))
+     (retract ?f)
+)
+
+
+;--- vede semn atentionare pericol de animale inafara localtiatii -verif
+(defrule AGENT::r_vede_drum_animale_inafara_localitatii
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname pericol_animale) (percept_pval vede) (percept_pdistance 300))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?dis <- (ag_bel (bel_type fluent) (bel_pname distance) (bel_pdistance ?))
+	?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval ?road))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval false))
+=>
+	(modify ?s (bel_pval 70)) 
+     (modify ?dis (bel_pval 300)) 
+	(if (eq ?*ag-in-debug* TRUE) then (printout t "   suntem in zona de pericol de animale in afara localitatii"  crlf) )
+     (retract ?f)
+)
+
+;--- semn atentionare pericol de animale inafara localtiatii -verif
+(defrule AGENT::r_drum_animale_inafara_localitatii
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname pericol_animale) (percept_pval intra))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+	?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval ?road))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval false))
+=>
+	(modify ?s (bel_pval 50)) 
+	(if (eq ?*ag-in-debug* TRUE) then (printout t "   suntem in zona de pericol de animale in afara localitatii"  crlf) )
+     (retract ?f)
+)
+
+;--- Gps info intalnim indicatorul de atentionare la animale in localitate sau inafara -verif
 (defrule AGENT::r-end-drum-animale-localitate-gps
      (declare (salience 5))
      (timp (valoare ?t))
@@ -814,109 +1131,130 @@
      (modify ?d (bel_pval ?def))
      (modify ?l (bel_pval ?r_t))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am iesit de pe un drum cu atentionare la animale GPS"  crlf))
-	 ;;(printout t "   am iesit de pe un drum cu atentionare la animale GPS"  crlf)
-	 (retract ?f)
+	(retract ?f)
 )
 
-
-;--- Sign indicator care arata viteza maxima admisa este 50 km/h
-(defrule AGENT::r_viteza_maxima_50
+;--- vede semn indicator care arata viteza maxima admisa este 50 km/h -verif
+(defrule AGENT::r_vede_viteza_maxima_50
 	(declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname viteza_maxima_50) (percept_pval ?val))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname viteza_maxima_50) (percept_pval vede) (percept_pdistance 300))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
-     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?))
+     ?dis <- (ag_bel (bel_type fluent) (bel_pname distance) (bel_pdistance ?))
 =>
-     (if (eq ?val entering) then (modify ?s (bel_pval 50)))
-     (if (eq ?val entering) then (modify ?d (bel_pval 50)))
+     (modify ?s (bel_pval 70))
+     (modify ?dis (bel_pdistance 300))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   Am intalnit un indicator care indica viteza maxima 50 km/h"  crlf))
-	 ;;(printout t "   Am intalnit un indicator care indica viteza maxima 50 km/h"  crlf)
      (retract ?f)
 )
 
-;--- Sign end indicator care arata viteza maxima admisa este 50 km/h
-(defrule AGENT::r_sign_end_viteza_maxima_50
+;--- semn indicator care arata viteza maxima admisa este 50 km/h -verif
+(defrule AGENT::r_viteza_maxima_50
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname viteza_maxima_50) (percept_pval intra))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?))
+=>
+     (modify ?s (bel_pval 50))
+     (modify ?d (bel_pval 50))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   Am intalnit un indicator care indica viteza maxima 50 km/h"  crlf))
+     (retract ?f)
+)
+
+;--- semn iesire indicator care arata viteza maxima admisa este 50 km/h, pe drum european -verif
+(defrule AGENT::r_semn_ridicare_testrictie_viteza_maxima_50
     (declare (salience 50)) ; Prioritate standard
     (timp (valoare ?t)) ; Capturăm timpul
-    ?f <- (ag_percept (percept_pobj road_sign) (percept_pname viteza_maxima_50) (percept_pval leaving)) ; Semn de ieșire
+    ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname viteza_maxima_50) (percept_pval paraseste)) ; Semn de ieșire
     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit) (bel_pval ?sl)) ; Limită de viteză curentă
     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def)) ; Limită implicită
-    ?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval ?rt)) ; Tipul drumului
+    ?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval european)) ; Tipul drumului
 =>
-    (if (eq ?rt european)
-        then 
-            (modify ?s (bel_pval 100)) ; Setăm viteza curentă la 100
-            (modify ?d (bel_pval 100)) ; Setăm viteza implicită la 100
-            (if (eq ?*ag-in-debug* TRUE)
-                then (printout t "   Drum european detectat: viteza setată la 100 km/h." crlf)))
-    (if (neq ?rt european)
-        then 
-            (modify ?s (bel_pval ?def)) ; Revenim la valoarea implicită
-            (if (eq ?*ag-in-debug* TRUE)
-                then (printout t "   Drum non-european detectat: viteza resetată la valoarea implicită (" ?def ")." crlf)))
-    (if (eq ?*ag-in-debug* TRUE)
-        then (printout t "   Am ieșit din zona în care viteza maximă era 50 km/h la timpul: " ?t crlf))
+    
+     (modify ?s (bel_pval 100)) ; Setăm viteza curentă la 100
+     (modify ?d (bel_pval 100)) ; Setăm viteza implicită la 100
+     (if (eq ?*ag-in-debug* TRUE)
+                then (printout t "   Drum european detectat: viteza setată la 100 km/h." crlf))
     (retract ?f)
 )
 
 
 
-;--- Sign indicator care arata viteza maxima admisa este 30km/h
+;--- semn indicator care arata viteza maxima admisa este 30km/h -verif
 (defrule AGENT::r_viteza_maxima_30
 	(declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname viteza_maxima_30) (percept_pval ?val))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname viteza_maxima_30) (percept_pval intra))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
 =>
-     (if (eq ?val entering) then (modify ?s (bel_pval 30)))
+     (modify ?s (bel_pval 30))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   Am intalnit un indicator care indica viteza maxima 30 km/h"  crlf))
-	 ;;(printout t "   Am intalnit un indicator care indica viteza maxima 30 km/h"  crlf)
      (retract ?f)
 )
 
-;--- Sign end indicator care arata viteza maxima admisa este 30km/h
-(defrule AGENT::r_sign_end_viteza_maxima_30
+;--- semn end indicator care arata viteza maxima admisa este 30km/h -verif
+(defrule AGENT::r_semn_end_viteza_maxima_30
 	(declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname viteza_maxima_30) (percept_pval leaving))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname viteza_maxima_30) (percept_pval paraseste))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
 =>
-     ;;;(if (eq ?val leaving)  then (modify ?s (bel_pval ?def)))
-	 (modify ?s (bel_pval ?def))
+     
+	(modify ?s (bel_pval ?def))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   Am iesit din zona in care viteza maxima era 30 km/h"  crlf))
-	 ;;(printout t "   Am iesit din zona in care viteza maxima era 30 km/h"  crlf)
      (retract ?f)
 )
 
 
-;--- Sign trecere pietoni semaforizata
-(defrule AGENT::r_trecere_pietoni_semaforizata
+;--- vede semn trecere pietoni semaforizata  -verif
+(defrule AGENT::r_vede_trecere_pietoni_semaforizata
 	(declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname trecere_pietoni_semafor) (percept_pval ?val))
-	 ?p <- (ag_percept (percept_pobj senzor_semafor_culoare) (percept_pname perceptie_semafor_culoare) (percept_pval ?culoare))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname trecere_pietoni_semafor) (percept_pval vede) (percept_pdistance 300))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?dis <- (ag_bel (bel_type fluent) (bel_pname distance) (bel_pdistance ?))
+=>
+     (modify ?s (bel_pval 50))
+     (modify ?dis (bel_pdistance 300))
+	(if (eq ?*ag-in-debug* TRUE) then (printout t "   suntem in asteptare la o trecere de pietoni semaforizata"  crlf) )						
+     (retract ?f)
+)
+
+;--- semn trecere pietoni semaforizata culoare rosu -verif
+(defrule AGENT::r_trecere_pietoni_semaforizata_rosu
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname trecere_pietoni_semafor) (percept_pval intra))
+	?p <- (ag_percept (percept_pobj senzor_semafor_culoare) (percept_pname perceptie_semafor_culoare) (percept_pval rosu))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
 =>
-    (if (and (eq ?val entering) (or (eq ?culoare rosu) (eq ?culoare galben) ) ) then (modify ?s (bel_pval 0))
-								(if (eq ?*ag-in-debug* TRUE) then (printout t "   suntem in asteptare la o trecere de pietoni semaforizata"  crlf) )
-								;;(printout t "   suntem in asteptare la o trecere de pietoni semaforizata"  crlf) 
-	)
-     (if (and (eq ?val entering) (eq ?culoare verde) ) then (modify ?s (bel_pval 30)) 
-								(if (eq ?*ag-in-debug* TRUE) then (printout t "   Semaforul indica culoarea verde"  crlf) )
-								;;(printout t "   Semaforul indica culoarea verde"  crlf) 
-	)
-     ;;(if (eq ?val leaving)  then (modify ?s (bel_pval ?def)))
-     (if (eq ?*ag-in-debug* TRUE) then (printout t "   suntem in asteptare la o trecere de pietoni semaforizata"  crlf))
-	 ;;(printout t "   suntem in asteptare la o trecere de pietoni semaforizata"  crlf)
+     (modify ?s (bel_pval 0))
+	(if (eq ?*ag-in-debug* TRUE) then (printout t "   suntem in asteptare la o trecere de pietoni semaforizata"  crlf) )						
      (retract ?f)
-	 (retract ?p)
+	(retract ?p)
 )
 
-;--- Sign end trecere pietoni semaforizata
-(defrule AGENT::r_end_trecere_pietoni_semaforizata
+;--- semn trecere pietoni semaforizata culoare verde -verif
+(defrule AGENT::r_trecere_pietoni_semaforizata_verde
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname trecere_pietoni_semafor) (percept_pval intra))
+	?p <- (ag_percept (percept_pobj senzor_semafor_culoare) (percept_pname perceptie_semafor_culoare) (percept_pval verde))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+=>
+     (modify ?s (bel_pval 30)) 
+	(if (eq ?*ag-in-debug* TRUE) then (printout t "   Semaforul indica culoarea verde"  crlf) )
+     (retract ?f)
+	(retract ?p)
+)
+
+;--- semn iesire trecere pietoni semaforizata -verif
+(defrule AGENT::r_iesire_trecere_pietoni_semaforizata
 	(declare (salience 50))
      (timp (valoare ?t))
      ?p <- (ag_percept (percept_pobj car_sensor) (percept_pname trecere_pietoni_semafor) (percept_pval false))
@@ -925,119 +1263,115 @@
 =>
      (modify ?s (bel_pval ?default))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   am trecut de trecerea de pietoni semaforizata cu ajutorul senzorului "  crlf))
-	 ;;(printout t "   am trecut de trecerea de pietoni semaforizata cu ajutorul senzorului "  crlf)
      (retract ?p)
 )
 	 
 
-;--Senzorul de ninsoare ne atentioneaza ca incepe sa ninga
-(defrule AGENT::r-snowing
+;--senzorul de ninsoare ne atentioneaza ca incepe sa ninga in localitate -verif
+(defrule AGENT::r-ninsoare-localitate
      (declare (salience 40))
      (timp (valoare ?t))
-     ?p <- (ag_percept (percept_pobj snowing_sensor) (percept_pname is_snowing) (percept_pval true))
+     ?p <- (ag_percept (percept_pobj ninsoare_sensor) (percept_pname is_ninsoare) (percept_pval true))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval ?road))
-     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval ?locality))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval true))
 =>
-    (if (eq ?road autostrada) then (modify ?s (bel_pval 50)) 
-	 else
-		(if (eq ?locality true) then (modify ?s (bel_pval 30)) 
-			(if (eq ?*ag-in-debug* TRUE) then (printout t "   a inceput sa ninga in localitate"  crlf) )
-			;;(printout t "   a inceput sa ninga in localitate"  crlf) 
-		)
-		(if (eq ?locality false) then (modify ?s (bel_pval 50)) 
-			(if (eq ?*ag-in-debug* TRUE) then (printout t "   a inceput sa ninga in afara localitatii"  crlf) )
-			;;(printout t "   a inceput sa ninga in afara localitatii"  crlf) 
-		)
-	)
-     (if (eq ?*ag-in-debug* TRUE) then (printout t "   a inceput sa ninga "  crlf))
-	 ;;;(printout t "   a inceput sa ninga "  crlf)
+    
+	(modify ?s (bel_pval 30)) 
+	(if (eq ?*ag-in-debug* TRUE) then (printout t "   a inceput sa ninga in localitate"  crlf) )
      (retract ?p)
 )
 
-;--Senzorul de ninsoare ne atentioneaza ca NU mai ninge
+;--senzorul de ninsoare ne atentioneaza ca incepe sa ninga inafara localitate -verif
+(defrule AGENT::r-ninsoare--inafara-localitatii
+     (declare (salience 40))
+     (timp (valoare ?t))
+     ?p <- (ag_percept (percept_pobj ninsoare_sensor) (percept_pname is_ninsoare) (percept_pval true))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval ?road))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval false))
+=>
+    
+	(modify ?s (bel_pval 50)) 
+	(if (eq ?*ag-in-debug* TRUE) then (printout t "   a inceput sa ninga in afara localitatii"  crlf) )
+     (retract ?p)
+)
+
+;--senzorul de ninsoare ne atentioneaza ca NU mai ninge -verif
 (defrule AGENT::r-snow-stops
      (declare (salience 40))
      (timp (valoare ?t))
-     ?p <- (ag_percept (percept_pobj snowing_sensor) (percept_pname is_snowing) (percept_pval false))
+     ?p <- (ag_percept (percept_pobj ninsoare_sensor) (percept_pname is_ninsoare) (percept_pval false))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?default))
 =>
      (modify ?s (bel_pval ?default))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   a incetat ninsoarea "  crlf))
-	 ;;(printout t "   a incetat ninsoarea "  crlf)
      (retract ?p)
 )
 
 
-;Trecere de pietoni in localitate + in afara localitatii _ sunt pietoni pe trecere
+;--trecere de pietoni in localitate + in afara localitatii _ sunt pietoni pe trecere -verif
 (defrule AGENT::r-trecere_de_pietoni
      (declare (salience 50))
      (timp (valoare ?t))
-	 ?p <- (ag_percept (percept_pobj car_sensor) (percept_pname perceptie_pieton) (percept_pval walking))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname trecere_de_pietoni) (percept_pval ?val))
+	?p <- (ag_percept (percept_pobj car_sensor) (percept_pname perceptie_pieton) (percept_pval walking))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname trecere_de_pietoni) (percept_pval intra))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
-	 ?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval ?road))
-	 ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval ?locality))
+	?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval ?road))
+	?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval ?locality))
 =>
-	 ;(if (eq ?road autostrada) then (modify ?s (bel_pval 30)) 
-	 ;else
-	;	(if (eq ?locality true) then (modify ?s (bel_pval 30)) 
-	;		(if (eq ?*ag-in-debug* TRUE) then (printout t "   Suntem la o trecere de pietoni in localitate"  crlf) )
-	;		;;(printout t "   Suntem la o trecere de pietoni in localitate"  crlf) 
-	;	)
-	;	(if (eq ?locality false) then (modify ?s (bel_pval 30)) 
-	;		(if (eq ?*ag-in-debug* TRUE) then (printout t "   Suntem la o trecere de pietoni in afara localitatii"  crlf) )
-	;		;;(printout t "   Suntem la o trecere de pietoni in afara localitatii"  crlf) 
-	;	)
-     ;)
+	
 	 
-	(if (eq ?val entering) then (modify ?s (bel_pval 0)) 
-		(if (eq ?*ag-in-debug* TRUE) then (printout t "   Suntem la o trecere de pietoni in localitate si trec pietoni"  crlf))
-	)
-	 
-	 (retract ?p)
+	(modify ?s (bel_pval 0)) 
+	(if (eq ?*ag-in-debug* TRUE) then (printout t "   Suntem la o trecere de pietoni in localitate si trec pietoni"  crlf))
+	(retract ?p)
      (retract ?f)
-	 (retract ?p)
+	(retract ?p)
 )
 
 
-;--Trecere de pietoni in localitate + in afara localitatii _ e liber
+;--vede trecere de pietoni in localitate + in afara localitatii _ e liber -verif
+(defrule AGENT::r-vede_trecere_de_pietoni_liber
+     (declare (salience 50))
+     (timp (valoare ?t))
+	?p <- (ag_percept (percept_pobj car_sensor) (percept_pname perceptie_pieton) (percept_pval all_clear))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname trecere_de_pietoni) (percept_pval vede) (percept_pdistance 150))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?dis <- (ag_bel (bel_type fluent) (bel_pname distance) (bel_pdistance ?d))
+	?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval ?road))
+	?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval ?locality))
+=>
+	(modify ?s (bel_pval 40)) 
+     (modify ?dis (bel_pdistance 150)) 
+	(if (eq ?*ag-in-debug* TRUE) then (printout t "   Suntem la o trecere de pietoni in localitate si este liber"  crlf))
+	(retract ?p)
+     (retract ?f)
+	(retract ?p)
+)
+
+;--Trecere de pietoni in localitate + in afara localitatii _ e liber -verif
 (defrule AGENT::r-trecere_de_pietoni_liber
      (declare (salience 50))
      (timp (valoare ?t))
-	 ?p <- (ag_percept (percept_pobj car_sensor) (percept_pname perceptie_pieton) (percept_pval all_clear))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname trecere_de_pietoni) (percept_pval ?val))
+	?p <- (ag_percept (percept_pobj car_sensor) (percept_pname perceptie_pieton) (percept_pval all_clear))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname trecere_de_pietoni) (percept_pval intra))
      ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
-	 ?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval ?road))
-	 ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval ?locality))
+	?l <- (ag_bel (bel_type fluent) (bel_pname road_type) (bel_pval ?road))
+	?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval ?locality))
 =>
-	 (if (eq ?road autostrada) then (modify ?s (bel_pval 30)) 
-	 else
-		(if (eq ?locality true) then (modify ?s (bel_pval 30)) 
-			(if (eq ?*ag-in-debug* TRUE) then (printout t "   Suntem la o trecere de pietoni in localitate"  crlf) )
-			;;(printout t "   Suntem la o trecere de pietoni in localitate"  crlf) 
-		)
-		(if (eq ?locality false) then (modify ?s (bel_pval 30)) 
-			(if (eq ?*ag-in-debug* TRUE) then (printout t "   Suntem la o trecere de pietoni in afara localitatii"  crlf) )
-			;;(printout t "   Suntem la o trecere de pietoni in afara localitatii"  crlf) 
-		)
-     )
-    
-	(if (eq ?val entering) then (modify ?s (bel_pval 30)) 
-		(if (eq ?*ag-in-debug* TRUE) then (printout t "   Suntem la o trecere de pietoni in localitate si este liber"  crlf))
-	)
-	 
-	 (retract ?p)
+	(modify ?s (bel_pval 30)) 
+	(if (eq ?*ag-in-debug* TRUE) then (printout t "   Suntem la o trecere de pietoni in localitate si este liber"  crlf))
+	(retract ?p)
      (retract ?f)
-	 (retract ?p)
+	(retract ?p)
 )
 
 
-;Sign end trecere de pietoni in localitate + in afara localitatii senzor
-(defrule AGENT::r-sign-end_trecere_de_pietoni_sensor
+;--semn iesire trecere de pietoni in localitate + in afara localitatii senzor -verif
+(defrule AGENT::r-semn-end_trecere_de_pietoni_sensor
      (declare (salience 50))
      (timp (valoare ?t))
      ?p <- (ag_percept (percept_pobj car_sensor) (percept_pname trecere_de_pietoni) (percept_pval false))
@@ -1046,30 +1380,106 @@
 =>
      (modify ?s (bel_pval ?default))
      (if (eq ?*ag-in-debug* TRUE) then (printout t "   Am trecut de o trecere de pietoni "  crlf))
-	 ;;(printout t "   Am trecut de o trecere de pietoni din localitate "  crlf)
+     (retract ?p)
+)
+
+;--- vede semn drum alunecos viteza = 30km/h -verif
+(defrule AGENT::r_vede_semn_drum_alunecos_in_localitate
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_alunecos) (percept_pval vede) (percept_pdistance 150))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval true))
+     ?dis <- (ag_bel (bel_type fluent) (bel_pname distance) (bel_pval ?))
+=>
+     (modify ?s (bel_pval 40))
+     (modify ?dis (bel_pdistance 150))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   a vazut semnul pentru drum alunecos asa ca incetineste"  crlf))
+     (retract ?f)
+)
+
+;--- semn drum_alunecos viteza = 30km/h -verif
+(defrule AGENT::r_semn_drum_alunecos_in_localitate
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_alunecos) (percept_pval intra))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval true))
+=>
+     (modify ?s (bel_pval 30))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona unde avem drum_alunecos in localitate"  crlf))
+     (retract ?f)
+)
+
+;--- semn iesire drum_alunecos viteza = 30km/h -verif
+(defrule AGENT::r_semn_iesire_drum_alunecos_in_localitate
+	(declare (salience 40))
+     (timp (valoare ?t))
+     ?p <- (ag_percept (percept_pobj car_sensor) (percept_pname drum_alunecos) (percept_pval iesire))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?default))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval true))
+=>
+     (modify ?s (bel_pval ?default))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am iesit din zona unde sunt dispozitive de limitare pentru viteza"  crlf))
+     (retract ?p)
+)
+
+;--- vede semn drum alunecos viteza = 50km/h -verif
+(defrule AGENT::r_vede_semn_drum_alunecos_inafara_localitatii
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_alunecos) (percept_pval vede) (percept_pdistance 300))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval false))
+     ?dis <- (ag_bel (bel_type fluent) (bel_pname distance) (bel_pval ?))
+=>
+     (modify ?s (bel_pval 70))
+     (modify ?dis (bel_pdistance 150))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   a vazut semnul pentru drum alunecos asa ca incetineste"  crlf))
+     (retract ?f)
+)
+
+;--- semn drum_alunecos viteza = 50km/h -verif
+(defrule AGENT::r_semn_drum_alunecos_inafara_localitatii
+	(declare (salience 50))
+     (timp (valoare ?t))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_alunecos) (percept_pval intra))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?def))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval false))
+=>
+     (modify ?s (bel_pval 50))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am intrat in zona unde avem drum_alunecos inafara localitatii"  crlf))
+     (retract ?f)
+)
+
+;--- semn iesire drum_alunecos viteza = 50km/h -verif
+(defrule AGENT::r_semn_iesire_drum_alunecos_inafara_localitatii
+	(declare (salience 40))
+     (timp (valoare ?t))
+     ?p <- (ag_percept (percept_pobj car_sensor) (percept_pname drum_alunecos) (percept_pval iesire))
+     ?s <- (ag_bel (bel_type fluent) (bel_pname speeding-limit)(bel_pval ?))
+     ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default) (bel_pval ?default))
+     ?i <- (ag_bel (bel_type fluent) (bel_pname in_locality) (bel_pval false))
+=>
+     (modify ?s (bel_pval ?default))
+     (if (eq ?*ag-in-debug* TRUE) then (printout t "   am iesit din zona unde avem drum_alunecos"  crlf))
      (retract ?p)
 )
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-
-
-
-
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 ;--- End of all restrictions
 (defrule AGENT::r-incetare-tuturor-restrictiilor
      (declare (salience 50))
      (timp (valoare ?t))
-     ?f <- (ag_percept (percept_pobj road_sign) (percept_pname restrictions) (percept_pval ended))
+     ?f <- (ag_percept (percept_pobj semn_de_circulatie) (percept_pname restrictions) (percept_pval iesire))
      ?s <- (ag_bel (bel_type fluent)(bel_pname speeding-limit) (bel_pval ?))
      ?d <- (ag_bel (bel_type fluent) (bel_pname speeding-default)(bel_pval ?def))
 =>

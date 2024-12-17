@@ -1,2 +1,3 @@
 
-(ag_percept (percept_pobj car_sensor) (percept_pname drum_cu_denivelari) (percept_pval ended))
+(ag_percept (percept_pobj semn_de_circulatie) (percept_pname trecere_pietoni_semafor) (percept_pval intra))
+(ag_percept (percept_pobj senzor_semafor_culoare) (percept_pname perceptie_semafor_culoare) (percept_pval rosu))

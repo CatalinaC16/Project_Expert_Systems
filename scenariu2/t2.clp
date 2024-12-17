@@ -1,4 +1,4 @@
 
-(ag_percept (percept_pobj road_sign) (percept_pname zona_sens_giratoriu ) (percept_pval entering))
+(ag_percept (percept_pobj semn_de_circulatie) (percept_pname zona_sens_giratoriu) (percept_pval vede) (percept_pdistance 300))
 
 

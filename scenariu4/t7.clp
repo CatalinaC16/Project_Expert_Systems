@@ -1,2 +1,2 @@
 
-(ag_percept (percept_pobj road_sign) (percept_pname zona_de_scoala) (percept_pval entering))
+(ag_percept (percept_pobj car_sensor) (percept_pname trecere_pietoni_semafor) (percept_pval false))

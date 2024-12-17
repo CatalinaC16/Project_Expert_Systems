@@ -1,2 +1,1 @@
-
-(ag_percept (percept_pobj gps_info) (percept_pname zona_sens_giratoriu) (percept_pval false))
+(ag_percept (percept_pobj ninsoare_sensor) (percept_pname is_ninsoare) (percept_pval true))

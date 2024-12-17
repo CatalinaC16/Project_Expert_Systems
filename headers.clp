@@ -29,11 +29,11 @@
 ;(defglobal ?*percepts-in-debug* = TRUE)
 
 ;(defglobal ?*perceptsDir* = "./scenariu1/")
-(defglobal ?*perceptsDir* = "./scenariu2/")
+;(defglobal ?*perceptsDir* = "./scenariu2/")
 ;(defglobal ?*perceptsDir* = "./scenariu3/")
 ;(defglobal ?*perceptsDir* = "./scenariu4/")
 ;(defglobal ?*perceptsDir* = "./scenariu5/")
-;(defglobal ?*perceptsDir* = "./scenariu6/")
+(defglobal ?*perceptsDir* = "./scenariu6/")
 
 
 (deftemplate PERCEPT-MANAGER::timp (slot valoare))
@@ -44,6 +44,7 @@
     (slot percept_pname) ; animal|indicator|marcaj|GPS-info
     (slot percept_pval); albina|barza|... or depasire_interzisa|... or (linie_continua|...)
     (slot percept_pobj); left|right|ahead|speed_value
+    (slot percept_pdistance (default nil)) ;; Distanța față de obiect (opțional, implicit nil)
 )
 ;
 ;-------------Modul: DRIVER-AGENT
@@ -71,4 +72,5 @@
     (slot bel_pname) ; which property we're talking about: overtaking-maneuver|no-overtaking-zone|speed_limit
     (slot bel_pval) ; bel_pname value: (prohibited|allowed) or (yes|no) or (50|90|100|130)
     (slot bel_pobj); left|right|ahead
+    (slot bel_pdistance (default nil)) ;
 )

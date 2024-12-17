@@ -1,2 +1,2 @@
 
-(ag_percept (percept_pobj road_sign) (percept_pname drum_cu_denivelari) (percept_pval entering))
+(ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_offroad) (percept_pval intra))

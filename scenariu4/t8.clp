@@ -1,2 +1,3 @@
 
-(ag_percept (percept_pobj gps_info) (percept_pname zona_de_scoala) (percept_pval false))
+(ag_percept (percept_pobj semn_de_circulatie) (percept_pname drum_european) (percept_pval intra))
+

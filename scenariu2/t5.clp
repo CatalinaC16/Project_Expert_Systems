@@ -1,4 +1,3 @@
 
-(ag_percept (percept_pobj car_sensor) (percept_pname perceptie_pieton) (percept_pval walking))
-(ag_percept (percept_pobj road_sign) (percept_pname trecere_de_pietoni) (percept_pval entering))
+(ag_percept (percept_pobj semn_de_circulatie) (percept_pname viteza_maxima_50) (percept_pval vede) (percept_pdistance 300))
 
